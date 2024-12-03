@@ -101,3 +101,11 @@ sudo systemctl enable problem-bank_gunicorn
 sudo systemctl start phone-repair_gunicorn
 sudo systemctl enable phone-repair_gunicorn
 ```
+
+## If you've updated content
+git pull the content into your project folder first   
+```
+sudo systemctl restart phone-repair_gunicorn
+sudo systemctl restart problem-bank_gunicorn
+sudo systemctl reload nginx
+```
