@@ -15,6 +15,8 @@ How I host multiple Django apps on the same Linode running Ubuntu, say I have tw
 
 ## Configure gunicorn service file 
 - You need a gunicorn service file for each app at /etc/systemd/system/problem_bank_gunicorn.service
+- The /var/www/django_app/<app_name>.sock file will be created on its own
+
 Gunicorn service file template
 ```
 [Unit]
