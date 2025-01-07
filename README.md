@@ -6,6 +6,8 @@ How I host multiple Django apps on the same Linode running Ubuntu, say I have tw
 - Run ``` python manage.py runserver ``` to check for errors with the django application
 - Also, bear in mind that my file strucutre is problem_bank/proj/wsgi.py (Bear this in mind for gunicorn service file)
 - When you run gunicorn, you should get a /var/www/django_app/problem_bank.sock file - check that it exists
+- You might have installed packages from npm. Install these before running ```python manage.py tailwind start```
+- ⚠️ If you have any .env files and they are not in the repo, it might cause an issue
 
 ## Installing gunicorn and nginx
 - Git clone the django projects into Linode   
