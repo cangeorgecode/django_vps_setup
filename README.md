@@ -113,3 +113,17 @@ sudo systemctl restart phone-repair_gunicorn
 sudo systemctl restart problem-bank_gunicorn
 sudo systemctl reload nginx
 ```
+
+
+## If you've removed a website, deleted the .sock file in the django_app/
+
+Remove the file from the /etc/nginx/sites-enabled/<file>
+```
+sudo rm /etc/nginx/sites-enabled/dj_boilerplate_landing
+
+# Check that the remaining configs are valid:
+sudo nginx -t 
+
+sudo systemctl reload nginx
+```
+
