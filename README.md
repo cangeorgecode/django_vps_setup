@@ -71,7 +71,10 @@ sudo systemctl restart nginx
 
 ## Set up SSL for the domain
 - Follow this guide to install certbot: https://www.linode.com/docs/guides/enabling-https-using-certbot-with-nginx-on-debian/
-- But stop just before this command ``` sudo certbox --nginx ``` and do this instead ``` sudo certbot --nginx -d buildwebsite.io -d www.buildwebsite.io -d sumtingwong.me -d www.sumtingwong.me```
+- But stop just before this command ``` sudo certbox --nginx ``` and do this instead
+```
+sudo certbot --nginx -d buildwebsite.io -d www.buildwebsite.io -d sumtingwong.me -d www.sumtingwong.me
+```
 
 
 ## Debug
