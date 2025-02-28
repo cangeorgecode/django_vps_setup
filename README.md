@@ -128,5 +128,8 @@ sudo rm /etc/nginx/sites-enabled/dj_boilerplate_landing
 sudo nginx -t 
 
 sudo systemctl reload nginx
+
+# Run certbot for the new domain
+sudo certbot --nginx -d buildwebsite.io
 ```
 
