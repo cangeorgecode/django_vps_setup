@@ -114,6 +114,61 @@ sudo certbot --nginx -d <domain_name1> -d www.<domain_name1> -d <domain_name2> -
 &nbsp;
 
 
+## Install Redis  
+```bash
+sudo apt update
+sudo apt install redis-server
+```
+
+#### Test if it's installed correctly  
+```bash
+redis-cli ping
+```
+
+Should get back PONG  
+
+
+&nbsp;
+
+
+## Install celery
+```python
+pip install celery
+```
+
+#### Create a /etc/systemd/system/celery-worker.service file:  
+```
+[Unit]
+Description=Celery Worker
+After=network.target redis-server.service
+
+[Service]
+Type=simple
+User=root
+Group=www-data
+Environment="PATH=/var/www/django_app/djangoenv/bin"
+WorkingDirectory=/var/www/django_app/<app_name>
+ExecStart=/var/www/django_app/djangoenv/bin/celery -A proj worker -l INFO
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+#### Restart
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable celery-worker
+sudo systemctl start celery-worker
+sudo systemctl status celery-worker
+```
+
+
+&nbsp;
+
+
+
 ## Debug/Troubleshooting
 - If there's an error, check the followings
 - Check gunicorn services
