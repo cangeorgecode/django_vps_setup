@@ -45,7 +45,7 @@ After=network.target
 User=root
 Group=www-data
 WorkingDirectory=/var/www/django_app/<app_name>
-ExecStart=/var/www/django_app/djangoenv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/var/www/django_app/<app_name>.sock proj.wsgi:application
+ExecStart=/var/www/venv/bin/gunicorn --workers 3 --bind unix:/var/www/pdf.sock proj.wsgi:application --timeout 120 --worker-class sync --log-level info --error-logfile /var/log/gunicorn/error.log --access-logfile /var/log/gunicorn/access.log --capture-output  
 
 [Install]
 WantedBy=multi-user.target
