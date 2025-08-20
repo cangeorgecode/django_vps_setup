@@ -187,7 +187,7 @@ sudo systemctl status celery-worker
 
 
 
-## Debug/Troubleshooting
+## Troubleshooting
 - If there's an error, check the followings
 - Check gunicorn services
 ```
@@ -253,6 +253,29 @@ sudo certbot --nginx -d buildwebsite.io
 
 
 &nbsp;
+
+
+## Error: nginx: [emerg] a duplicate default server for 0.0.0.0:80 in /etc/nginx/sites-enabled/default:22
+- Need to find out where the dupes are  
+```bash
+sudo grep -r "listen.*default_server" /etc/nginx
+```
+
+- Look for
+```
+listen 80 default_server
+```
+
+I found mine in /etc/nginx/sites-available/default. Remove duplicated lines and remove ```default_server```
+
+Confirm fixes by running
+```
+sudo nginx -t
+```
+
+
+&nbsp;
+
 
 
 ## Contact Me 📧
