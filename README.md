@@ -68,6 +68,24 @@ server {
     }
 }
 ```
+
+- Nginx file best practice (according to AI)
+```
+server {
+    listen 80;
+    server_name <domain_name>;
+
+    location / {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+        proxy_pass http://unix:/var/www/<app>.sock;
+    }
+}
+
+```
 - You will still need an nginx config file, like a master file at /etc/nginx/conf.d/nginx.conf
 ```
 include /etc/nginx/sites-enabled/*;
