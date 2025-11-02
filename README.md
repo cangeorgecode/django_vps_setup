@@ -45,7 +45,7 @@ After=network.target
 User=root
 Group=www-data
 WorkingDirectory=/var/www/django_app/<app_name>
-ExecStart=/var/www/venv/bin/gunicorn --workers 3 --bind unix:/var/www/pdf.sock proj.wsgi:application --timeout 120 --worker-class sync --log-level info --error-logfile /var/log/gunicorn/error.log --access-logfile /var/log/gunicorn/access.log --capture-output  
+ExecStart=/var/www/django_app/djangoenv/bin/gunicorn --workers 3 --bind unix:/var/www/<app_name>.sock proj.wsgi:application --timeout 120 --worker-class sync --log-level info --error-logfile /var/log/gunicorn/error.log --access-logfile /var/log/gunicorn/access.log --capture-output  
 
 [Install]
 WantedBy=multi-user.target
@@ -61,6 +61,25 @@ WantedBy=multi-user.target
 server {
     listen 80;
     server_name <domain_name>;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/var/www/django_app/<app1_name>.sock;
+    }
+}
+```
+
+- With media
+
+```
+server {
+    listen 80;
+    server_name <domain_name>;
+
+    # Location for media files (user-uploaded content)
+    location /media/ {
+        alias /var/www/django_app/media/; # Path to your media directory
+    }
 
     location / {
         include proxy_params;
