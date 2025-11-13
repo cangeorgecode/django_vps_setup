@@ -296,12 +296,18 @@ sudo nginx -t
 &nbsp;
 
 
+## Python version problem  
 
-## Contact Me 📧
-Hi, my name is George. 👋 I am a self taught developer and I want to help others build SaaS quickly, reliably and affordably.  
+If you encounter a problem where a package requires python3.13+ and you only have python3.12 installed, here's how to fix it:  
 
-- Linode $60 credit: https://www.linode.com/lp/refer/?r=9ff0cd12e24c4e14bb041fd505242e605d1cc36d
-- My Django + HTMX SaaS Boilerplate (Free): https://github.com/cangeorgecode/Django_Boilerplate_Free
-- How-to, marketing, copywriting guide (no signup needed): https://joji.beehiiv.com
-- X: @joji_jiji
+```
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+
+sudo apt install python3.13
+
+rm rf djangoenv
+
+sudo apt install python3.13-venv
+```
   
