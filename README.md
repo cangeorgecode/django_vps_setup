@@ -44,7 +44,7 @@ After=network.target
 [Service]
 User=root
 Group=www-data
-WorkingDirectory=/var/www/django_app/<app_name>
+WorkingDirectory=/var/www/django_app/<app_name> # This needs to be where the proj dir is. Within the proj dir, there should be settings.py
 ExecStart=/var/www/django_app/djangoenv/bin/gunicorn --workers 3 --bind unix:/var/www/django_app/<app_name>.sock proj.wsgi:application --timeout 120 --worker-class sync --log-level info --error-logfile /var/log/gunicorn/error.log --access-logfile /var/log/gunicorn/access.log --capture-output  
 
 [Install]
