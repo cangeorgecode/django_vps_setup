@@ -18,6 +18,8 @@
 
 ## Generate an SSH key
 - Generally safer than just inputting password and more convenient as well
+- On local machine, you only need to generate the key once and it can be used for all future VPS. You can then start from step 2
+- Repeat the same to make VPS - Github transfer convenient. 
 
 1. Generate the key on your local machine
 ```
@@ -28,6 +30,15 @@ ssh-keygen -t ed25519 -C "comment here to label your key"
 ```
 ssh-copy-id username@VPS_IP
 ```
+
+2.1 Copy the key from VPS to Github
+```
+cat ~/.ssh/id_ed25519.pub
+```
+
+2.2 Copy output from 2.1 → Github → Settings → SSH and GPG keys → New SSH keys → Paste
+
+2.3 Then always clone using the SSH URL (not HTTPS)
 
 3. Test it
 ```
