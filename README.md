@@ -16,6 +16,31 @@
 
 &nbsp;
 
+## Generate an SSH key
+- Generally safer than just inputting password and more convenient as well
+
+1. Generate the key on your local machine
+```
+ssh-keygen -t ed25519 -C "comment here to label your key"
+```
+
+2. Copy the key to your VPS
+```
+ssh-copy-id username@VPS_IP
+```
+
+3. Test it
+```
+ssh root@VPS_IP
+```
+
+4. On VPS, edit /etc/ssh/sshd_config
+```
+PasswordAuthentication no
+```
+
+&nbsp;
+
 
 ## Installing gunicorn and nginx
 - Git clone your app into the /var/www/django_app/ directory
