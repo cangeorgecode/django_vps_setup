@@ -63,7 +63,9 @@ if command -v ngrok &>/dev/null; then
   info "ngrok already installed: $(ngrok version)"
 else
   info "Installing ngrok..."
-  curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok-v3-stable-linux-amd64.tgz | tar -xz -C /usr/local/bin
+  curl -sSL https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz -o /tmp/ngrok.tgz
+  tar -xzf /tmp/ngrok.tgz -C /usr/local/bin
+  rm -f /tmp/ngrok.tgz
   info "Installed: $(ngrok version)"
 fi
 
