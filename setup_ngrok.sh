@@ -5,7 +5,7 @@
 # Usage: bash setup_ngrok.sh
 # ============================================================
 
-set -e
+set -eo pipefail
 
 # --- Colors ---
 RED='\033[0;31m'
@@ -30,7 +30,9 @@ echo "  Ngrok VPS Setup"
 echo "============================================================"
 echo ""
 
-# --- Config ---
+# ============================================================
+# STEP 1: Gather configuration
+# ============================================================
 step 1 "Gather configuration"
 
 read -p "Project name (must match setup.sh, e.g. eczemaschool): " PROJECT_NAME
@@ -39,7 +41,8 @@ if [ -z "$PROJECT_NAME" ]; then error "Project name required."; exit 1; fi
 read -p "Ngrok static domain (e.g. eczemaschool.ngrok.app): " NGROK_DOMAIN
 if [ -z "$NGROK_DOMAIN" ]; then error "Ngrok domain required."; exit 1; fi
 
-read -p "Ngrok authtoken (from https://dashboard.ngrok.com/authtoken): " NGROK_AUTHTOKEN
+read -s -p "Ngrok authtoken (from https://dashboard.ngrok.com/authtoken): " NGROK_AUTHTOKEN
+echo ""
 if [ -z "$NGROK_AUTHTOKEN" ]; then error "Authtoken required."; exit 1; fi
 
 APP_DIR="/var/www/$PROJECT_NAME"
@@ -71,32 +74,60 @@ else
 fi
 
 # ============================================================
-# STEP 3: Configure ngrok authtoken
+# STEP 3: Write ngrok config
 # ============================================================
-step 3 "Configure ngrok authtoken"
+step 3 "Write ngrok config"
 
-ngrok config add-authtoken "$NGROK_AUTHTOKEN"
-info "Authtoken saved to ngrok config."
+NGROK_CONFIG_DIR="/root/.config/ngrok"
+NGROK_CONFIG_FILE="$NGROK_CONFIG_DIR/ngrok.yml"
+
+mkdir -p "$NGROK_CONFIG_DIR"
+
+cat > "$NGROK_CONFIG_FILE" << EOF
+version: "2"
+authtoken: ${NGROK_AUTHTOKEN}
+tunnels:
+  ${PROJECT_NAME}:
+    addr: 80
+    domain: ${NGROK_DOMAIN}
+EOF
+
+chmod 600 "$NGROK_CONFIG_FILE"
+info "Wrote ngrok config to $NGROK_CONFIG_FILE"
 
 # ============================================================
-# STEP 6: Add ngrok domain to Django ALLOWED_HOSTS
+# STEP 4: Update Django ALLOWED_HOSTS + CSRF_TRUSTED_ORIGINS
 # ============================================================
-step 4 "Update Django ALLOWED_HOSTS"
+step 4 "Update Django ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS"
 
 if [ -f "$ENV_FILE" ]; then
-  if grep -q "$NGROK_DOMAIN" "$ENV_FILE"; then
+  # --- ALLOWED_HOSTS ---
+  if grep -qF "$NGROK_DOMAIN" "$ENV_FILE"; then
     info "ALLOWED_HOSTS already includes $NGROK_DOMAIN"
   elif grep -q "ALLOWED_HOSTS=" "$ENV_FILE"; then
-    # Append ngrok domain to existing ALLOWED_HOSTS (before closing quote or end of line)
     sed -i "s/ALLOWED_HOSTS=\(.*\)/ALLOWED_HOSTS=\1,$NGROK_DOMAIN/" "$ENV_FILE"
-    info "Added $NGROK_DOMAIN to ALLOWED_HOSTS in $ENV_FILE"
+    info "Added $NGROK_DOMAIN to ALLOWED_HOSTS"
   else
     echo "ALLOWED_HOSTS=$NGROK_DOMAIN" >> "$ENV_FILE"
-    info "Added ALLOWED_HOSTS=$NGROK_DOMAIN to $ENV_FILE"
+    info "Added ALLOWED_HOSTS=$NGROK_DOMAIN"
+  fi
+
+  # --- CSRF_TRUSTED_ORIGINS (Django 4.0+ requires scheme + domain) ---
+  NGROK_ORIGIN="https://${NGROK_DOMAIN}"
+  if grep -qF "$NGROK_ORIGIN" "$ENV_FILE"; then
+    info "CSRF_TRUSTED_ORIGINS already includes $NGROK_ORIGIN"
+  elif grep -q "CSRF_TRUSTED_ORIGINS=" "$ENV_FILE"; then
+    sed -i "s/CSRF_TRUSTED_ORIGINS=\(.*\)/CSRF_TRUSTED_ORIGINS=\1,$NGROK_ORIGIN/" "$ENV_FILE"
+    info "Added $NGROK_ORIGIN to CSRF_TRUSTED_ORIGINS"
+  else
+    echo "CSRF_TRUSTED_ORIGINS=$NGROK_ORIGIN" >> "$ENV_FILE"
+    info "Added CSRF_TRUSTED_ORIGINS=$NGROK_ORIGIN"
   fi
 else
   warn ".env file not found at $ENV_FILE"
-  warn "You must add $NGROK_DOMAIN to ALLOWED_HOSTS manually in your Django settings."
+  warn "You must manually add to your Django settings:"
+  warn "  ALLOWED_HOSTS += ['$NGROK_DOMAIN']"
+  warn "  CSRF_TRUSTED_ORIGINS += ['https://$NGROK_DOMAIN']"
 fi
 
 # ============================================================
@@ -114,7 +145,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/ngrok http --domain=${NGROK_DOMAIN} 80
+ExecStart=/usr/bin/ngrok start --config=${NGROK_CONFIG_FILE} ${PROJECT_NAME}
 Restart=always
 RestartSec=5
 StandardOutput=journal
