@@ -216,6 +216,9 @@ step 9 "Virtualenv and dependencies"
 
 cd "$APP_DIR"
 
+mkdir -p "$APP_DIR/logs"
+info "Created logs directory: $APP_DIR/logs"
+
 if [ -d "$VENV_DIR" ]; then
   info "Virtualenv already exists."
 else
