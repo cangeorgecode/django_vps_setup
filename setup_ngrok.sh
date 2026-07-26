@@ -88,6 +88,7 @@ version: "2"
 authtoken: ${NGROK_AUTHTOKEN}
 tunnels:
   ${PROJECT_NAME}:
+    proto: http
     addr: 80
     domain: ${NGROK_DOMAIN}
 EOF
@@ -96,48 +97,17 @@ chmod 600 "$NGROK_CONFIG_FILE"
 info "Wrote ngrok config to $NGROK_CONFIG_FILE"
 
 # ============================================================
-# STEP 4: Update Django ALLOWED_HOSTS + CSRF_TRUSTED_ORIGINS
-# ============================================================
-step 4 "Update Django ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS"
-
-if [ -f "$ENV_FILE" ]; then
-  # --- ALLOWED_HOSTS ---
-  if grep -qF "$NGROK_DOMAIN" "$ENV_FILE"; then
-    info "ALLOWED_HOSTS already includes $NGROK_DOMAIN"
-  elif grep -q "ALLOWED_HOSTS=" "$ENV_FILE"; then
-    sed -i "s/ALLOWED_HOSTS=\(.*\)/ALLOWED_HOSTS=\1,$NGROK_DOMAIN/" "$ENV_FILE"
-    info "Added $NGROK_DOMAIN to ALLOWED_HOSTS"
-  else
-    echo "ALLOWED_HOSTS=$NGROK_DOMAIN" >> "$ENV_FILE"
-    info "Added ALLOWED_HOSTS=$NGROK_DOMAIN"
-  fi
-
-  # --- CSRF_TRUSTED_ORIGINS (Django 4.0+ requires scheme + domain) ---
-  NGROK_ORIGIN="https://${NGROK_DOMAIN}"
-  if grep -qF "$NGROK_ORIGIN" "$ENV_FILE"; then
-    info "CSRF_TRUSTED_ORIGINS already includes $NGROK_ORIGIN"
-  elif grep -q "CSRF_TRUSTED_ORIGINS=" "$ENV_FILE"; then
-    sed -i "s/CSRF_TRUSTED_ORIGINS=\(.*\)/CSRF_TRUSTED_ORIGINS=\1,$NGROK_ORIGIN/" "$ENV_FILE"
-    info "Added $NGROK_ORIGIN to CSRF_TRUSTED_ORIGINS"
-  else
-    echo "CSRF_TRUSTED_ORIGINS=$NGROK_ORIGIN" >> "$ENV_FILE"
-    info "Added CSRF_TRUSTED_ORIGINS=$NGROK_ORIGIN"
-  fi
-else
-  warn ".env file not found at $ENV_FILE"
-  warn "You must manually add to your Django settings:"
-  warn "  ALLOWED_HOSTS += ['$NGROK_DOMAIN']"
-  warn "  CSRF_TRUSTED_ORIGINS += ['https://$NGROK_DOMAIN']"
-fi
-
-# ============================================================
 # STEP 5: Create systemd service
 # ============================================================
 step 5 "Create ngrok systemd service"
 
 SERVICE_PATH="/etc/systemd/system/${SERVICE_NAME}.service"
 
-info "Writing ngrok service file..."
+# Dynamically locate the ngrok binary to prevent status=203/EXEC issues
+NGROK_BIN=$(command -v ngrok || echo "/usr/bin/ngrok")
+
+info "Writing ngrok service file (using binary: ${NGROK_BIN})..."
+
 cat > "$SERVICE_PATH" << EOF
 [Unit]
 Description=Ngrok tunnel for ${PROJECT_NAME}
@@ -145,7 +115,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/ngrok start --config=${NGROK_CONFIG_FILE} ${PROJECT_NAME}
+ExecStart=${NGROK_BIN} start --config=${NGROK_CONFIG_FILE} ${PROJECT_NAME}
 Restart=always
 RestartSec=5
 StandardOutput=journal
