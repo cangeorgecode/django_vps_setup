@@ -153,9 +153,6 @@ else
   mkdir -p "$APP_DIR"
 fi
 
-mkdir -p "$APP_DIR/logs"
-info "Created logs directory: $APP_DIR/logs"
-
 # ============================================================
 # STEP 7: VPS → GitHub SSH key
 # ============================================================
@@ -209,6 +206,9 @@ else
     git clone "$REPO_URL" "$APP_DIR"
   fi
 fi
+
+mkdir -p "$APP_DIR/logs"
+info "Created logs directory: $APP_DIR/logs"
 
 # ============================================================
 # STEP 9: Virtualenv + install dependencies
