@@ -469,7 +469,8 @@ mkdir -p "$NGROK_CONFIG_DIR"
 
 cat > "$NGROK_CONFIG_FILE" << EOF
 version: "3"
-authtoken: ${NGROK_AUTHTOKEN}
+agent:
+  authtoken: ${NGROK_AUTHTOKEN}
 tunnels:
   ${PROJECT_NAME}:
     proto: http
