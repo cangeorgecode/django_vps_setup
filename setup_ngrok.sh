@@ -62,10 +62,11 @@ step 2 "Install ngrok"
 if command -v ngrok &>/dev/null; then
   info "ngrok already installed: $(ngrok version)"
 else
-  info "Installing ngrok..."
-  curl -sSL https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz -o /tmp/ngrok.tgz
-  tar -xzf /tmp/ngrok.tgz -C /usr/local/bin
-  rm -f /tmp/ngrok.tgz
+  info "Installing ngrok via apt..."
+  curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+  echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list >/dev/null
+  apt update -y
+  apt install -y ngrok
   info "Installed: $(ngrok version)"
 fi
 
