@@ -523,14 +523,14 @@ fi
 # ============================================================
 step 17 "Create ngrok systemd service"
 
-SERVICE_PATH="/etc/systemd/system/${SERVICE_NAME}.service"
+NGROK_SERVICE_PATH="/etc/systemd/system/${NGROK_SERVICE_NAME}.service"
 
 # Dynamically locate the ngrok binary to prevent status=203/EXEC issues
 NGROK_BIN=$(command -v ngrok || echo "/usr/bin/ngrok")
 
 info "Writing ngrok service file (using binary: ${NGROK_BIN})..."
 
-cat > "$SERVICE_PATH" << EOF
+cat > "$NGROK_SERVICE_PATH" << EOF
 [Unit]
 Description=Ngrok tunnel for ${PROJECT_NAME}
 After=network.target
@@ -549,17 +549,17 @@ EOF
 
 info "Enabling and starting ngrok..."
 systemctl daemon-reload
-systemctl enable "$SERVICE_NAME"
-systemctl restart "$SERVICE_NAME"
+systemctl enable "$NGROK_SERVICE_NAME"
+systemctl restart "$NGROK_SERVICE_NAME"
 
 sleep 3
 
-if systemctl is-active --quiet "$SERVICE_NAME"; then
+if systemctl is-active --quiet "$NGROK_SERVICE_NAME"; then
   info "ngrok is running."
 else
   error "ngrok failed to start."
-  error "Check: systemctl status $SERVICE_NAME"
-  error "Logs: journalctl -u $SERVICE_NAME -f"
+  error "Check: systemctl status $NGROK_SERVICE_NAME"
+  error "Logs: journalctl -u $NGROK_SERVICE_NAME -f"
   exit 1
 fi
 
