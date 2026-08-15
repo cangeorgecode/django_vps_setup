@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ============================================================
 # setup_ngrok.sh — All-in-one Django VPS deployment with ngrok
-# Run as root on a fresh Ubuntu 22.04/24.04 VPS
+# Run as a sudo user on a fresh Ubuntu 22.04/24.04 VPS
+# (self-elevates to root via sudo for privileged commands)
 # Idempotent: safe to re-run if it fails halfway
 # No domain required — uses ngrok for public HTTPS access
 # Usage: bash setup_ngrok.sh
@@ -21,10 +22,15 @@ warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1"; }
 step()  { echo -e "\n${CYAN}=== STEP $1: $2 ===${NC}"; }
 
-# --- Pre-flight ---
+# --- Pre-flight: elevate to root via sudo if not already root ---
 if [ "$EUID" -ne 0 ]; then
-  error "Run this script as root: sudo bash setup_ngrok.sh"
-  exit 1
+  if command -v sudo >/dev/null 2>&1; then
+    info "Not root — re-running with sudo (enter your password when prompted)."
+    exec sudo bash "$(readlink -f "$0")" "$@"
+  else
+    error "This script needs root. Install sudo, or run as root."
+    exit 1
+  fi
 fi
 
 echo "============================================================"
