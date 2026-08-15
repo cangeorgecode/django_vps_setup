@@ -41,18 +41,31 @@ echo ""
 # --- Prompt for config ---
 step 1 "Gather configuration"
 
-read -p "Project name (lowercase, no spaces, e.g. kanafay): " PROJECT_NAME
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONFIG_FILE="$SCRIPT_DIR/.setup.conf"
+[ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"   # remember answers between runs
+
+read -e -p "Project name (lowercase, no spaces, e.g. kanafay): " -i "${PROJECT_NAME:-}" PROJECT_NAME
 if [ -z "$PROJECT_NAME" ]; then error "Project name required."; exit 1; fi
 
-read -p "Domain name (e.g. kanafay.com, leave blank if no domain yet): " DOMAIN
+read -e -p "Domain name (e.g. kanafay.com, leave blank if no domain yet): " -i "${DOMAIN:-}" DOMAIN
 
-read -p "Git repo SSH URL (e.g. git@github.com:user/repo.git): " REPO_URL
+read -e -p "Git repo SSH URL (e.g. git@github.com:user/repo.git): " -i "${REPO_URL:-}" REPO_URL
 if [ -z "$REPO_URL" ]; then error "Repo URL required."; exit 1; fi
 
-read -p "Django WSGI module name (default: config): " DJANGO_APP
+read -e -p "Django WSGI module name (default: config): " -i "${DJANGO_APP:-config}" DJANGO_APP
 DJANGO_APP="${DJANGO_APP:-config}"
 
-read -p "Your email (for Certbot SSL): " CERT_EMAIL
+read -e -p "Your email (for Certbot SSL): " -i "${CERT_EMAIL:-}" CERT_EMAIL
+
+# Save answers so a failed run doesn't re-prompt (fields are space-free)
+cat > "$CONFIG_FILE" << EOF
+PROJECT_NAME=${PROJECT_NAME}
+DOMAIN=${DOMAIN}
+REPO_URL=${REPO_URL}
+DJANGO_APP=${DJANGO_APP}
+CERT_EMAIL=${CERT_EMAIL}
+EOF
 
 APP_DIR="/var/www/$PROJECT_NAME"
 VENV_DIR="$APP_DIR/venv"
@@ -341,7 +354,7 @@ After=network.target
 User=root
 Group=www-data
 WorkingDirectory=${APP_DIR}
-EnvironmentFile=${APP_DIR}/.env
+EnvironmentFile=-${APP_DIR}/.env
 ExecStart=${GUNICORN_BIN} \\
   --workers 3 \\
   --bind unix:${SOCKET_FILE} \\

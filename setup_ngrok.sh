@@ -44,21 +44,40 @@ echo ""
 # ============================================================
 step 1 "Gather configuration"
 
-read -p "Project name (lowercase, no spaces, e.g. eczemaschool): " PROJECT_NAME
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONFIG_FILE="$SCRIPT_DIR/.setup_ngrok.conf"
+[ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"   # remember answers between runs
+
+read -e -p "Project name (must match setup.sh, e.g. eczemaschool): " -i "${PROJECT_NAME:-}" PROJECT_NAME
 if [ -z "$PROJECT_NAME" ]; then error "Project name required."; exit 1; fi
 
-read -p "Git repo SSH URL (e.g. git@github.com:user/repo.git): " REPO_URL
+read -e -p "Git repo SSH URL (e.g. git@github.com:user/repo.git): " -i "${REPO_URL:-}" REPO_URL
 if [ -z "$REPO_URL" ]; then error "Repo URL required."; exit 1; fi
 
-read -p "Django WSGI module name (default: config): " DJANGO_APP
+read -e -p "Django WSGI module name (default: config): " -i "${DJANGO_APP:-config}" DJANGO_APP
 DJANGO_APP="${DJANGO_APP:-config}"
 
-read -p "Ngrok static domain (e.g. eczemaschool.ngrok.app): " NGROK_DOMAIN
+read -e -p "Ngrok static domain (e.g. eczemaschool.ngrok.app): " -i "${NGROK_DOMAIN:-}" NGROK_DOMAIN
 if [ -z "$NGROK_DOMAIN" ]; then error "Ngrok domain required."; exit 1; fi
 
-read -s -p "Ngrok authtoken (from https://dashboard.ngrok.com/authtoken): " NGROK_AUTHTOKEN
-echo ""
+if [ -n "${NGROK_AUTHTOKEN:-}" ]; then
+  read -s -p "Ngrok authtoken (leave blank to keep saved): " _token
+  echo ""
+  [ -n "$_token" ] && NGROK_AUTHTOKEN="$_token"
+else
+  read -s -p "Ngrok authtoken (from https://dashboard.ngrok.com/authtoken): " NGROK_AUTHTOKEN
+  echo ""
+fi
 if [ -z "$NGROK_AUTHTOKEN" ]; then error "Authtoken required."; exit 1; fi
+
+# Save answers so a failed run doesn't re-prompt (fields are space-free)
+cat > "$CONFIG_FILE" << EOF
+PROJECT_NAME=${PROJECT_NAME}
+REPO_URL=${REPO_URL}
+DJANGO_APP=${DJANGO_APP}
+NGROK_DOMAIN=${NGROK_DOMAIN}
+NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+EOF
 
 APP_DIR="/var/www/$PROJECT_NAME"
 VENV_DIR="$APP_DIR/venv"
@@ -339,7 +358,7 @@ After=network.target
 User=root
 Group=www-data
 WorkingDirectory=${APP_DIR}
-EnvironmentFile=${APP_DIR}/.env
+EnvironmentFile=-${APP_DIR}/.env
 ExecStart=${GUNICORN_BIN} \\
   --workers 3 \\
   --bind unix:${SOCKET_FILE} \\
